@@ -31,7 +31,7 @@ module A2D_intf(clk,rst_n,strt_cnv,cnv_cmplt,chnnl,res,a2d_SS_n,SCLK,MOSI,MISO);
 	assign strt_cnv_FLTRD = q1 & q2;
 
 	//a2d_SS_n//
-	assign a2d_SS_n = cnv_cmplt;   //**?**
+	assign a2d_SS_n = cnv_cmplt;   //**?**//
 
 	//res[11:0]//
 	assign res = ~shift_reg[11:0];

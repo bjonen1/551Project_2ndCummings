@@ -1,4 +1,4 @@
-// A2D Interface
+// A2D Interface//
 
 module A2D_intf(clk,rst_n,strt_cnv,cnv_cmplt,chnnl,res,a2d_SS_n,SCLK,MOSI,MISO);
 
