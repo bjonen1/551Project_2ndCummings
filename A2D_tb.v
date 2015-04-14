@@ -10,7 +10,7 @@ module A2D__tb();
 	wire ss_n, sclk, mosi, miso, cnv_cmplt;
 	wire [11:0] res;
 	
-	A2D_intf inter(.clk(clk), .rst_n(rst_n), .strt_cnv(strt_cnv), .chnnl(chnnl), .miso(miso), .a2d_SS_n(ss_n), .sclk(sclk), .mosi(mosi), .cnv_cmplt(cnv_cmplt), .res(res));
+	A2D_intf inter(.clk(clk), .rst_n(rst_n), .strt_cnv(strt_cnv), .chnnl(chnnl), .MISO(miso), .a2d_SS_n(ss_n), .SCLK(sclk), .MOSI(mosi), .cnv_cmplt(cnv_cmplt), .res(res));
 	ADC128S slave(.clk(clk), .rst_n(rst_n), .SS_n(ss_n), .SCLK(sclk), .MOSI(mosi), .MISO(miso));
 	
 	initial begin
@@ -31,7 +31,7 @@ module A2D__tb();
 					strt_cnv = 1'b1;
 					
 					@(posedge cnv_cmplt);
-					if(~res != analogData[(error*8*6) + (conv*8) + channel]) begin
+					if(~res != analogData[(error*8*6) + (conv*8) + chnnl]) begin
 						$display("Conversion of channel %h failed\n", chnnl);
 					end
 					rst_n = 1'b0;
