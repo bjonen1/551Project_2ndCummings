@@ -7,6 +7,8 @@ module A2D__tb();
 	reg [2:0] conv;
 	reg [5:0] error;
 	
+	reg errorSignal;
+	
 	wire ss_n, sclk, mosi, miso, cnv_cmplt;
 	wire [11:0] res;
 	
@@ -17,28 +19,40 @@ module A2D__tb();
 		$readmemh("analog.dat", analogData);
 		
 		clk = 1'b0;
+		errorSignal = 1'b0;
 		
-		error = 6'h00;
-		for(error = 0; error < 60; error = error + 1) begin
+		rst_n = 1'b0;
+		@(negedge clk)
+		rst_n = 1'b1;
+		
+		//error = 6'h00;
+		//for(error = 0; error < 60; error = error + 1) begin
 			conv = 2'h0;
 			for(conv = 0; conv < 6; conv = conv + 1) begin
-				rst_n = 1'b0;
+				//rst_n = 1'b0;
 				strt_cnv = 1'b0;
 				chnnl = 3'h0;
 				for(chnnl = 0; chnnl < 8; chnnl = chnnl + 1) begin
+				  errorSignal = 1'b0;
 					@(negedge clk);
-					rst_n = 1'b1;
+					//rst_n = 1'b1;
 					strt_cnv = 1'b1;
 					
-					@(posedge cnv_cmplt);
-					if(~res != analogData[(error*8*6) + (conv*8) + chnnl]) begin
-						$display("Conversion of channel %h failed\n", chnnl);
-					end
-					rst_n = 1'b0;
+					
+					repeat(2)@(negedge clk);
 					strt_cnv = 1'b0;
+					
+					@(posedge cnv_cmplt);
+					if(~res != slave.shft_reg[11:0]) begin
+					  errorSignal = 1'b1;
+						$display("Error %d Conversion of %d channel %h failed\n",error, conv, chnnl);
+						$display("Expected %h\n\n", slave.shft_reg[11:0]);
+					end
+					repeat(10)@(posedge clk);
+					//rst_n = 1'b0;
 				end
 			end
-		end
+		//end
 		$stop;
 	end
 	
