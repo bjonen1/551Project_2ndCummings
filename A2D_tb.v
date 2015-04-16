@@ -20,13 +20,12 @@ module A2D__tb();
 		
 		clk = 1'b0;
 		errorSignal = 1'b0;
-		
-		rst_n = 1'b0;
-		@(negedge clk)
-		rst_n = 1'b1;
 
 		chnnl = 3'h0;
 		for(chnnl = 0; chnnl < 8; chnnl = chnnl + 1) begin
+		rst_n = 1'b0;
+		@(negedge clk)
+		rst_n = 1'b1;
 		error = 6'h00;
 		for(error = 0; error < 60; error = error + 1) begin
 			conv = 2'h0;
