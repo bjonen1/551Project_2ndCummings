@@ -8,3 +8,6 @@
 *.wlf
 transcript
 work
+output_files
+db
+incremental_db
