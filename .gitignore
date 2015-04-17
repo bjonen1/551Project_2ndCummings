@@ -1,8 +1,8 @@
 # ignore not verilog files
 
 *.bak
-*.qpf
-*.qsf
+#*.qpf
+#*.qsf
 *.mti
 *.mpf
 *.wlf
