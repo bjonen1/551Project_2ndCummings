@@ -46,7 +46,7 @@ module A2D_intf(clk,rst_n,strt_cnv,cnv_cmplt,chnnl,res,a2d_SS_n,SCLK,MOSI,MISO);
 		   clk_cntr <= clk_cntr + 1;
 					
 	//SCLK Generation//
-  always @ (posedge clk, negedge rst_n)
+ /* always @ (posedge clk, negedge rst_n)
      if (!rst_n)
        SCLK <= 1'b1;
      else if (!SCLK_en)
@@ -54,7 +54,8 @@ module A2D_intf(clk,rst_n,strt_cnv,cnv_cmplt,chnnl,res,a2d_SS_n,SCLK,MOSI,MISO);
      else if(clk_cntr == sixteen || clk_cntr == 5'b1_1111 )
       SCLK <= ~SCLK;
      else
-       SCLK <= SCLK;
+       SCLK <= SCLK;*/
+	assign SCLK = ~clk_cntr[4];
        
   //a2d_SS_n
   always @(posedge clk, negedge rst_n)
@@ -160,7 +161,7 @@ module A2D_intf(clk,rst_n,strt_cnv,cnv_cmplt,chnnl,res,a2d_SS_n,SCLK,MOSI,MISO);
 				      nxt_state = SEND_MOSI;
 				      clk_cnt_en = 1'b1;
 				      shift_cnt_rst = 1'b0;
-				      if(clk_cntr == 5'd16)
+				      if(clk_cntr == 5'd14)//*changed 
 				        if(!first_time)
 				          shift_now = 1'b1;
 				        else
@@ -174,7 +175,7 @@ module A2D_intf(clk,rst_n,strt_cnv,cnv_cmplt,chnnl,res,a2d_SS_n,SCLK,MOSI,MISO);
 				  nxt_state = REC_MISO;
 				  clk_cnt_en = 1'b1;
 				  shift_cnt_rst = 1'b0;
-				  if(clk_cntr == 5'd16)
+				  if(clk_cntr == 5'd14)//*changed 
 				    shift_now = 1'b1;
 				 end
 				  else begin
