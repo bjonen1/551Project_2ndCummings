@@ -138,8 +138,9 @@ module barcode(clk, rst_n, BC, clr_ID_vld, ID_vld, ID);
 					rst_bit_cnt = 1;
 					rst_count_start = 1;
 					rst_samp_cnt = 1;
-					//if(ID[7] == 1'b0)
+					if(ID[7] == 1'b0) begin
 						set_ID_vld = 1;
+					end
 				end
 		endcase
 	end
