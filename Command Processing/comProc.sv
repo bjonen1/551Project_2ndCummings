@@ -9,7 +9,7 @@ module comProc(clk, rst_n, cmd_rdy, cmd, ID_vld, ID, Ok2Move, clr_cmd_rdy, go, c
 	
 	logic set_in_transit, clr_in_transit, set_dest_ID, piezoEn;
 	
-	typedef enum reg [3:0] {WAITRDY1, CHKGO1, WAITRDY2, CHKGO2, CHKIDVLD, CHKID} state_t;
+	typedef enum reg [2:0] {IDLE, CMD_RDY, ID_VLD} state_t;
 	state_t state, nxt_state;
 	
 	//in_transit flop
@@ -36,7 +36,7 @@ module comProc(clk, rst_n, cmd_rdy, cmd, ID_vld, ID, Ok2Move, clr_cmd_rdy, go, c
 	//state flop
 	always_ff @(posedge clk, negedge rst_n)
 		if(!rst_n)
-			state <= WAITRDY1;
+			state <= IDLE;
 		else
 			state <= nxt_state;
 			
@@ -47,41 +47,37 @@ module comProc(clk, rst_n, cmd_rdy, cmd, ID_vld, ID, Ok2Move, clr_cmd_rdy, go, c
 		set_in_transit = 1'b0;
 		clr_in_transit = 1'b0;
 		set_dest_ID = 1'b0;
-		nxt_state = WAITRDY1;
+		nxt_state = IDLE;
 		
 		case(state)
-			WAITRDY1:
-				if(cmd_rdy)
-					nxt_state = CHKGO1;
-			CHKGO1:
-				if(cmd[7:6] == 2'b01) begin
+			IDLE:
+				if(cmd == go && cmd_rdy) begin
 					set_in_transit = 1'b1;
 					set_dest_ID = 1'b1;
-					nxt_state = WAITRDY2;
 				end
-			WAITRDY2:
-				if(cmd_rdy)
-					nxt_state = CHKGO2;
-				else
-					nxt_state = CHKIDVLD;
-			CHKGO2:
-				if(cmd[7:6] == 2'b01) begin
+			CMD_RDY:
+				if(!cmd_rdy)
+					nxt_state = ID_VLD;
+				else if(cmd != go && cmd != stop)
+					nxt_state = ID_VLD;
+				else if(cmd == go) begin
 					set_in_transit = 1'b1;
 					set_dest_ID = 1'b1;
-					nxt_state = WAITRDY2;
+					nxt_state = CMD_RDY;
 				end
-				else
+				else //cmd == stop
 					clr_in_transit = 1'b1;
-			CHKIDVLD: 
-				if(ID_vld) begin
+			default:
+				if(~ID_vld)
+					nxt_state = CMD_RDY;
+				else if(ID != dest_ID)begin
 					clr_ID_vld = 1'b1;
-					nxt_state = CHKID;
-				end
-				else
-					nxt_state = WAITRDY2;
-			default: //CHKID
-				if(ID == dest_ID)
+					nxt_state = CMD_RDY;
+				end					
+				else begin //ID==dest_ID
+					clr_ID_vld = 1'b1;
 					clr_in_transit = 1'b1;
+				end
 		endcase
 	end
 endmodule
