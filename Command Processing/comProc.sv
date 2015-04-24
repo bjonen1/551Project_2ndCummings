@@ -1,4 +1,4 @@
-module comProc(clk, rst_n, cmd_rdy, cmd, ID_vld, ID, Ok2Move, clr_cmd_rdy, go, clr_ID_vld, buzz, buzz_n, prox_en);
+module comProc(clk, rst_n, cmd_rdy, cmd, ID_vld, ID, Ok2Move, clr_cmd_rdy, go, clr_ID_vld, buzz, buzz_n, in_transit);
 	input clk, rst_n, cmd_rdy, ID_vld, Ok2Move;
 	input [7:0] cmd, ID;
 	
@@ -6,11 +6,27 @@ module comProc(clk, rst_n, cmd_rdy, cmd, ID_vld, ID, Ok2Move, clr_cmd_rdy, go, c
 	
 	reg in_transit;
 	reg [5:0] dest_ID;
+	reg [13:0] buzzer;
 	
 	logic set_in_transit, clr_in_transit, set_dest_ID, piezoEn;
 	
 	typedef enum reg [2:0] {IDLE, CMD_RDY, ID_VLD} state_t;
 	state_t state, nxt_state;
+	
+	local param buzzer_count = 14'h30d4;
+	
+	// piezzo buzzer
+	always_ff @(posedge clk, negedge rst_n)
+		if(!rst_n)
+			buzzer <= 14'h0000;
+		else if(piezoEn)
+			buzzer <= buzzer + 1'b1;
+		else if(buzzer == buzzer_count)
+			buzzer <= 14'h0000;
+			
+	assign buzz = buzzer[13];
+	assign buzz_n = ~buzz;
+	
 	
 	//in_transit flop
 	always_ff @(posedge clk, negedge rst_n)
@@ -24,7 +40,7 @@ module comProc(clk, rst_n, cmd_rdy, cmd, ID_vld, ID, Ok2Move, clr_cmd_rdy, go, c
 	//go and buzzer logic
 	assign go = in_transit & Ok2Move;
 	assign piezoEn = in_transit & ~Ok2Move;
-	assign prox_en = in_transit;
+	//assign prox_en = in_transit;
 	
 	//dest_ID flop
 	always_ff @(posedge clk, negedge rst_n)
