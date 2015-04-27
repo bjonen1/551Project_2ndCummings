@@ -244,7 +244,64 @@ module motion_cntrl(clk, rst_n, cnv_cmplt, go res, strt_cnv, IR_out_en, IR_mid_e
 				end
 				else
 					nxt_state = CONV2;
+			CALC1:
+				if(chnnl == 6) begin
+					dst2intgrl = 1'b1;
+					src2sel = 3'b011;
+					src1sel = 3'b001;
+					nxt_state = CALC2;
+				end
+				else begin
+					timer_load = 12'd4095;
+					load_timer = 1'b1;
+					strt_timer = 1'b1;
+					
+					nxt_state = MOD;
+				end
+			CALC2: begin
+				dest2icomp = 1'b1;
+				src2sel = 3'b001;
+				src1sel = 3'b001;
+				multiply = 1'b1;
+				
+				nxt_state = CALC3;
+			end
+			CALC3: begin
+				dest2pcomp = 1'b1;
+				src2sel = 3'b010;
+				src1sel = 3'b100;
+				multiply = 1'b1;
+				
+				nxt_state = CALC4;
+			end
+			CALC4: begin
+				dest2accum = 1'b1;
+				src2sel = 3'b100;
+				src1sel = 3'b011;
+				sub = 1'b1;
+				
+				nxt_state = CALC5;
+			end
+			CALC5: begin
+				dst2rht = 1'b1;
+				src2sel = 3'b000;
+				src1sel = 3'b010;
+				sub = 1'b1;
+				
+				nxt_state = CALC6;
+			end
+			CALC6: begin
+				dest2accum = 1'b1;
+				src2sel = 3'b100;
+				src1sel = 3'b011;
+				
+				nxt_state = CALC7;
+			end
+			default: begin //CALC7
+				dest2lft = 1'b1;
+				src2sel = 3'b000;
+				src1sel = 3'b010;
+			end
 		endcase
-		
 	end
 endmodule
