@@ -4,7 +4,7 @@ module motion_cntrl(clk, rst_n, cnv_cmplt, go res, strt_cnv, IR_out_en, IR_mid_e
 	input go;
 	
 	output logic IR_out_en, IR_mid_en, IR_in_en;
-	output reg [10:0] lft_reg, rht_reg;
+	output reg [11:0] lft_reg, rht_reg;
 	output reg [2:0] chnnl;
 	output logic strt_cnv;
 	
@@ -27,6 +27,9 @@ module motion_cntrl(clk, rst_n, cnv_cmplt, go res, strt_cnv, IR_out_en, IR_mid_e
 	reg [11:0] timer_val;
 	reg [11:0] timer_load;
 	logic strt_timer, clr_timer, timer_done, load_timer;
+	
+	reg [1:0] int_dec;
+	logic inc_int_dec;
 	
 	logic [2:0] IR_en;
 	
@@ -64,7 +67,7 @@ module motion_cntrl(clk, rst_n, cnv_cmplt, go res, strt_cnv, IR_out_en, IR_mid_e
 	always_ff @(posedge clk, negedge rst_n)
 		if(!rst_n)
 			intgrl <= 12'h000;
-		else if (dst2ingrl)
+		else if (dst2intgrl)
 			intgrl <= dst[11:0];
 			
 	//icomp flop
@@ -84,16 +87,33 @@ module motion_cntrl(clk, rst_n, cnv_cmplt, go res, strt_cnv, IR_out_en, IR_mid_e
 	//rht_reg flop
 	always_ff @(posedge clk, negedge rst_n)
 		if(!rst_n)
-			rht_reg <= 11'h000;
+			rht_reg <= 12'h000;
+		else if(!go)
+			rht_reg <= 12'h000;
 		else if(dst2rht)
-			rht_reg <= dst[10:0];
+			rht_reg <= dst[11:0];
+			
+	assign rht = rht_reg[11:1];
 	
 	//lft_reg flop
 	always_ff @(posedge clk, negedge rst_n)
 		if(!rst_n)
-			lft_reg <= 11'h000;
+			lft_reg <= 12'h000;
+		else if(!go)
+			lft_reg <= 12'h000;
 		else if(dst2rht)
-			lft_reg <= dst[10:0];
+			lft_reg <= dst[11:0];
+			
+	assign lft = lft_reg[11:0];
+			
+	//fwd flop
+	always_ff @(posedge clk, negedge rst_n)
+		if(!rst_n)
+			fwd <= 12'h000;
+		else if(~go)
+			fwd <= 12'h000;
+		else if(dst2ingrl & ~&fwd[10:8])
+			fwd <= fwd + 1'b1;
 			
 	//channel count flop
 	always_ff @(posedge clk, negedge rst_n)
@@ -125,6 +145,16 @@ module motion_cntrl(clk, rst_n, cnv_cmplt, go res, strt_cnv, IR_out_en, IR_mid_e
 			
 	assign timer_done = timer_cnt == 0;
 	
+	//int_dec counter
+	always_ff @(posedge clk, negedge rst_n)
+		if(!rst_n)
+			int_dec <= 2'b00;
+		else if (inc_int_dec)
+			int_dec <= int_dec + 1'b1;
+	
+	//ALU
+	ALU iALU(.accum(accum), .pcomp(pcomp), .pterm(pterm), .fwd(fwd), .a2d_res(a2d_res), .error(error), .intgrl(intgrl), .icomp(icomp), .iterm(iterm), .src0sel(src1sel), .src1sel(src2sel), .multiply(multiply), .sub(sub), .mult2(mult2), .mult4(mult4), .saturate(saturate), .dst(dst));
+	
 	//state flop
 	always_ff @(posedge clk, negedge rst_n)
 		if(!rst_n)
@@ -150,7 +180,7 @@ module motion_cntrl(clk, rst_n, cnv_cmplt, go res, strt_cnv, IR_out_en, IR_mid_e
 		sub = 1'b0;
 		mult2 = 1'b0; 
 		mult4 = 1'b0; 
-		saturate = 1'b1;
+		saturate = 1'b0;
 		
 		inc_chnnl_cnt = 1'b0;
 		clr_chnnl_cnt = 1'b0;
@@ -160,6 +190,8 @@ module motion_cntrl(clk, rst_n, cnv_cmplt, go res, strt_cnv, IR_out_en, IR_mid_e
 		timer_done = 1'b0;
 		load_timer = 1'b0;
 		timer_load = 12'h000;
+		
+		inc_int_dec = 1'b0;
 		
 		strt_cnv = 1'b0;
 		nxt_state = IDLE;
@@ -236,6 +268,7 @@ module motion_cntrl(clk, rst_n, cnv_cmplt, go res, strt_cnv, IR_out_en, IR_mid_e
 							src1sel = 3'b000;
 							mult4 = 1'b1;
 							sub = 1'b1;
+							saturate = 1'b1;
 						end
 					endcase
 					
@@ -246,9 +279,12 @@ module motion_cntrl(clk, rst_n, cnv_cmplt, go res, strt_cnv, IR_out_en, IR_mid_e
 					nxt_state = CONV2;
 			CALC1:
 				if(chnnl == 6) begin
-					dst2intgrl = 1'b1;
+					if(&int_dec)
+						dst2intgrl = 1'b1;
+					inc_int_dec = 1'b1;
 					src2sel = 3'b011;
 					src1sel = 3'b001;
+					saturate = 1'b1;
 					nxt_state = CALC2;
 				end
 				else begin
@@ -287,7 +323,7 @@ module motion_cntrl(clk, rst_n, cnv_cmplt, go res, strt_cnv, IR_out_en, IR_mid_e
 				src2sel = 3'b000;
 				src1sel = 3'b010;
 				sub = 1'b1;
-				
+				saturate = 1'b1;
 				nxt_state = CALC6;
 			end
 			CALC6: begin
@@ -301,6 +337,7 @@ module motion_cntrl(clk, rst_n, cnv_cmplt, go res, strt_cnv, IR_out_en, IR_mid_e
 				dest2lft = 1'b1;
 				src2sel = 3'b000;
 				src1sel = 3'b010;
+				saturate = 1'b1;
 			end
 		endcase
 	end
