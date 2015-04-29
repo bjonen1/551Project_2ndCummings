@@ -76,9 +76,10 @@ module comProc(clk, rst_n, cmd_rdy, cmd, ID_vld, ID, Ok2Move, clr_cmd_rdy, go, c
 					nxt_state = CMD_RDY;        //*
 				end
 			CMD_RDY:
-				if(!cmd_rdy)
+				if(!cmd_rdy) begin
 					nxt_state = ID_VLD;
 					clr_cmd_rdy = 1'b1;
+					end
 				else if(cmd != GO && cmd != stop)
 					nxt_state = ID_VLD;
 				else if(cmd == GO) begin
