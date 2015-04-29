@@ -1,9 +1,9 @@
 //WORKING!
-module UART_tx(clk, rst_n, trmt, TX, tx_data, tx_done);
+module uart_tx(clk, rst_n, strt_tx, tx, tx_data, tx_done);
 
-input clk, rst_n, trmt;
+input clk, rst_n, strt_tx;
 input [7:0] tx_data;
-output TX, tx_done;
+output tx, tx_done;
 
 wire load, transmitting, set_done, clr_done;
 reg [9:0] tx_shft_reg;
@@ -12,7 +12,7 @@ reg [3:0] bit_cnt;
 reg shift;
 reg tx_done_preOut;
 wire set_baud0;
-TX_SM SM1(clk,rst_n,trmt, bit_cnt, transmitting, load, clr_done, set_done);
+TX_SM SM1(clk,rst_n,strt_tx, bit_cnt, transmitting, load, clr_done, set_done);
 
 //THIS BLOCK IS ALL OF THE BAUD CNTR
 always @(posedge clk)begin
@@ -53,7 +53,7 @@ always @(posedge clk)begin
  endcase
  end
 end
-assign TX = tx_shft_reg[0];
+assign tx = tx_shft_reg[0];
 
 //here is all of tx_done logic
 always @(posedge clk or negedge rst_n)begin

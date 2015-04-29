@@ -47,6 +47,9 @@ barcode_mimic iMSTR(.clk(clk),.rst_n(rst_n),.period(22'h1000),.send(send_BC),.st
 // useful for monitoring/testing design.     //
 //////////////////////////////////////////////
 
+
+localparam [7:0] STOP = {2'b00,6'hxx};
+localparam [7:0] GO = {2'b01, cmd[5:0]};
 				
 initial begin
   ///////////////////////////////////////////////////
@@ -56,6 +59,11 @@ initial begin
   // have a suite of smaller top level tests.  //
   //////////////////////////////////////////////
   clk = 0;
+  rst_n = 0;
+  Ok2Move = 0;
+  send_cmd = 0;
+  send_BC = 0;
+  cmd = 
  
 end
 

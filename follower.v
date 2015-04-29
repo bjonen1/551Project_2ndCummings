@@ -25,8 +25,9 @@ module Follower(clk,RST_n,led,a2d_SS_n,SCLK,MISO,MOSI,rev_rht,
   wire [2:0] chnnl;				// A2D channel to convert
   wire cmd_rdy, clr_cmd_rdy, clr_ID_vld, ID_vld;
   wire cnv_cmplt, strt_cnv, dbg_tx, dbg_done;
+  wire rst_n;
   
-  reg rst_ff_n,rst_n;
+  reg rst_ff_n;//,rst_n;
   reg OK2Move_ff1,OK2Move_ff2;
   
   /////////////////////////////////////

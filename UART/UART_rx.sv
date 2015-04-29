@@ -57,11 +57,11 @@ module RX_SM(clk,rst_n,clr_rdy, RX, rdy, bit_cnt, receiving, load, clrOut_rdy, s
 endmodule
 
 //it works yo
-module UART_rx(clk, rst_n, RX, clr_rdy, rdy, cmd);
+module uart_rcv(clk, rst_n, RX, clr_rx_rdy, rx_rdy, rx_data);
 
-input clk, rst_n, RX, clr_rdy;
-output rdy;
-output [7:0] cmd;
+input clk, rst_n, RX, clr_rx_rdy;
+output rx_rdy;
+output [7:0] rx_data;
 
 wire load, receiving, set_rdy, clrOut_rdy;
 reg [7:0] rx_shft_reg;
@@ -71,7 +71,7 @@ reg shift;
 reg rdy_preOut;
 reg half_init;
 wire set_baud0;
-RX_SM SM1(clk,rst_n,clr_rdy, RX, rdy, bit_cnt, receiving, load, clrOut_rdy, set_rdy);
+RX_SM SM1(clk,rst_n,clr_rx_rdy, RX, rx_rdy, bit_cnt, receiving, load, clrOut_rdy, set_rdy);
 
 //THIS BLOCK IS ALL OF THE BAUD CNTR
 always @(posedge clk or negedge rst_n)begin
@@ -133,7 +133,7 @@ always @(posedge clk or negedge rst_n)begin
  endcase
  end
 end
-assign cmd = rx_shft_reg;
+assign rx_data = rx_shft_reg;
 
 //here is all of tx_done logic
 always @(posedge clk or negedge rst_n)begin
@@ -146,14 +146,14 @@ always @(posedge clk or negedge rst_n)begin
   else
     rdy_preOut <= rdy_preOut;
 end
-assign rdy = rdy_preOut;
+assign rx_rdy = rdy_preOut;
 
 endmodule
 
 module UART_BOTH_TB ();
 reg clk, rst_n, trmt, clr_rdy;
 reg [7:0] tx_data;
-wire TX, tx_done, rdy;
+wire TX, tx_done, rx_rdy;
 wire [7:0] rx_data;
 
 UART_tx UART1(clk, rst_n, trmt, TX, tx_data, tx_done);

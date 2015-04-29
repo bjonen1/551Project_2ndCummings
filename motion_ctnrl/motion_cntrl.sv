@@ -43,8 +43,8 @@ module motion_cntrl(clk, rst_n, cnv_cmplt, go, res, strt_cnv, IR_out_en, IR_mid_
 				   (chnnl_cnt == 4 || chnnl_cnt == 5) ? 3'b100: 3'b000;
 	
 	//define pterm, iterm
-	assign pterm = 14'h3680;
-	assign iterm = 12'h500;
+	assign pterm = 14'h37e0;
+	assign iterm = 12'h380;
 	
 	logic dst2accum, res2accum, dst2error, dst2intgrl, dst2icomp, dst2pcomp, dst2rht, dst2lft;
 	
@@ -154,7 +154,7 @@ module motion_cntrl(clk, rst_n, cnv_cmplt, go, res, strt_cnv, IR_out_en, IR_mid_
 			int_dec <= int_dec + 1'b1;
 	
 	//ALU
-	ALU iALU(.accum(accum), .pcomp(pcomp), .pterm(pterm), .fwd(fwd), .a2d_res(a2d_res), .error(error), .intgrl(intgrl), .icomp(icomp), .iterm(iterm), .src0sel(src1sel), .src1sel(src2sel), .multiply(multiply), .sub(sub), .mult2(mult2), .mult4(mult4), .saturate(saturate), .dst(dst));
+	ALU iALU(.accum(accum), .pcomp(pcomp), .pterm(pterm), .fwd(fwd), .a2d_res(res), .error(error), .intgrl(intgrl), .icomp(icomp), .iterm(iterm), .src0sel(src1sel), .src1sel(src2sel), .multiply(multiply), .sub(sub), .mult2(mult2), .mult4(mult4), .saturate(saturate), .dst(dst));
 	
 	//state flop
 	always_ff @(posedge clk, negedge rst_n)
