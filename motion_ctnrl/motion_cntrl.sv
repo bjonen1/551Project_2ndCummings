@@ -1,10 +1,11 @@
-module motion_cntrl(clk, rst_n, cnv_cmplt, go res, strt_cnv, IR_out_en, IR_mid_en, IR_in_en, lft, rht, chnnl);
+module motion_cntrl(clk, rst_n, cnv_cmplt, go, res, strt_cnv, IR_out_en, IR_mid_en, IR_in_en, lft, rht, chnnl);
 	input clk, rst_n, cnv_cmplt;
 	input [11:0] res;
 	input go;
 	
 	output logic IR_out_en, IR_mid_en, IR_in_en;
-	output reg [11:0] lft_reg, rht_reg;
+	output reg [10:0] lft, rht;
+	reg[11:0] lft_reg, rht_reg;
 	output reg [2:0] chnnl;
 	output logic strt_cnv;
 	
@@ -22,9 +23,9 @@ module motion_cntrl(clk, rst_n, cnv_cmplt, go res, strt_cnv, IR_out_en, IR_mid_e
 	state_t state, nxt_state;
 	
 	reg [2:0] chnnl_cnt;
-	logic inc_chnnl_cnt;
+	logic inc_chnnl_cnt, clr_chnnl_cnt;
 	
-	reg [11:0] timer_val;
+	reg [11:0] timer_cnt;
 	reg [11:0] timer_load;
 	logic strt_timer, clr_timer, timer_done, load_timer;
 	
@@ -39,13 +40,13 @@ module motion_cntrl(clk, rst_n, cnv_cmplt, go res, strt_cnv, IR_out_en, IR_mid_e
 	
 	assign IR_en = (chnnl_cnt == 0 || chnnl_cnt == 1) ? 3'b001:
 				   (chnnl_cnt == 2 || chnnl_cnt == 3) ? 3'b010:
-				   (chnnl_cnt == 4 || chnnl_cnt == 5) ? 3'b100;
+				   (chnnl_cnt == 4 || chnnl_cnt == 5) ? 3'b100: 3'b000;
 	
 	//define pterm, iterm
 	assign pterm = 14'h3680;
 	assign iterm = 12'h500;
 	
-	logic dst2accum, res2accum, dst2error, dst2intgrl, dest2icomp, dest2pcomp, dest2rht, dest2lft;
+	logic dst2accum, res2accum, dst2error, dst2intgrl, dst2icomp, dst2pcomp, dst2rht, dst2lft;
 	
 	//accum flop
 	always_ff @(posedge clk, negedge rst_n)
@@ -104,7 +105,7 @@ module motion_cntrl(clk, rst_n, cnv_cmplt, go res, strt_cnv, IR_out_en, IR_mid_e
 		else if(dst2rht)
 			lft_reg <= dst[11:0];
 			
-	assign lft = lft_reg[11:0];
+	assign lft = lft_reg[11:1];
 			
 	//fwd flop
 	always_ff @(posedge clk, negedge rst_n)
@@ -112,7 +113,7 @@ module motion_cntrl(clk, rst_n, cnv_cmplt, go res, strt_cnv, IR_out_en, IR_mid_e
 			fwd <= 12'h000;
 		else if(~go)
 			fwd <= 12'h000;
-		else if(dst2ingrl & ~&fwd[10:8])
+		else if(dst2intgrl & ~&fwd[10:8])
 			fwd <= fwd + 1'b1;
 			
 	//channel count flop
@@ -168,10 +169,10 @@ module motion_cntrl(clk, rst_n, cnv_cmplt, go res, strt_cnv, IR_out_en, IR_mid_e
 		res2accum = 1'b1;
 		dst2error = 1'b0;
 		dst2intgrl = 1'b0; 
-		dest2icomp = 1'b0;
-		dest2pcomp = 1'b0;
-		dest2rht = 1'b0;
-		dest2lft = 1'b0;
+		dst2icomp = 1'b0;
+		dst2pcomp = 1'b0;
+		dst2rht = 1'b0;
+		dst2lft = 1'b0;
 		
 
 		src1sel = 3'h0;
@@ -187,7 +188,6 @@ module motion_cntrl(clk, rst_n, cnv_cmplt, go res, strt_cnv, IR_out_en, IR_mid_e
 		
 		strt_timer = 1'b0;
 		clr_timer = 1'b0;
-		timer_done = 1'b0;
 		load_timer = 1'b0;
 		timer_load = 12'h000;
 		
@@ -209,6 +209,7 @@ module motion_cntrl(clk, rst_n, cnv_cmplt, go res, strt_cnv, IR_out_en, IR_mid_e
 				if(timer_done) begin
 					strt_cnv = 1'b1;
 					nxt_state = CONV;
+				end
 				else
 					nxt_state = MOD;
 			CONV:
@@ -295,7 +296,7 @@ module motion_cntrl(clk, rst_n, cnv_cmplt, go res, strt_cnv, IR_out_en, IR_mid_e
 					nxt_state = MOD;
 				end
 			CALC2: begin
-				dest2icomp = 1'b1;
+				dst2icomp = 1'b1;
 				src2sel = 3'b001;
 				src1sel = 3'b001;
 				multiply = 1'b1;
@@ -303,7 +304,7 @@ module motion_cntrl(clk, rst_n, cnv_cmplt, go res, strt_cnv, IR_out_en, IR_mid_e
 				nxt_state = CALC3;
 			end
 			CALC3: begin
-				dest2pcomp = 1'b1;
+				dst2pcomp = 1'b1;
 				src2sel = 3'b010;
 				src1sel = 3'b100;
 				multiply = 1'b1;
@@ -311,7 +312,7 @@ module motion_cntrl(clk, rst_n, cnv_cmplt, go res, strt_cnv, IR_out_en, IR_mid_e
 				nxt_state = CALC4;
 			end
 			CALC4: begin
-				dest2accum = 1'b1;
+				dst2accum = 1'b1;
 				src2sel = 3'b100;
 				src1sel = 3'b011;
 				sub = 1'b1;
@@ -327,14 +328,14 @@ module motion_cntrl(clk, rst_n, cnv_cmplt, go res, strt_cnv, IR_out_en, IR_mid_e
 				nxt_state = CALC6;
 			end
 			CALC6: begin
-				dest2accum = 1'b1;
+				dst2accum = 1'b1;
 				src2sel = 3'b100;
 				src1sel = 3'b011;
 				
 				nxt_state = CALC7;
 			end
 			default: begin //CALC7
-				dest2lft = 1'b1;
+				dst2lft = 1'b1;
 				src2sel = 3'b000;
 				src1sel = 3'b010;
 				saturate = 1'b1;
