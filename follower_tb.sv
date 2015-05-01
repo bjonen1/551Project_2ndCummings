@@ -49,7 +49,7 @@ barcode_mimic iMSTR(.clk(clk),.rst_n(rst_n),.period(22'h1000),.send(send_BC),.st
 
 
 localparam [7:0] STOP = {2'b00,6'hxx};
-localparam [7:0] GO = {2'b01, cmd[5:0]};
+localparam [7:0] GO = {2'b01, 6'h00};
 				
 initial begin
   ///////////////////////////////////////////////////
@@ -60,11 +60,48 @@ initial begin
   //////////////////////////////////////////////
   clk = 0;
   rst_n = 0;
-  Ok2Move = 0;
+  OK2Move = 0;
   send_cmd = 0;
   send_BC = 0;
-  cmd = 
- 
+  cmd = STOP;
+  Barcode = 8'h01;
+  
+  repeat(4)@(negedge clk);
+  rst_n = 1;
+  OK2Move = 1;
+  cmd = GO | 6'h02;
+  send_BC = 1;
+  @(negedge clk);
+  send_BC = 0;
+  @(posedge BC_done);
+  send_cmd = 1;
+  @(posedge clk);
+  send_cmd = 0;
+  $display("Sent go command");
+  @(posedge cmd_sent);
+  Barcode = 8'h02;
+  send_BC = 1;
+  @(posedge clk);
+  send_BC = 0;
+  @(posedge BC_done);
+  $display("Sent new ID");
+  $stop;
+  
+  cmd = GO | 6'h01;
+  send_cmd = 1;
+  @(posedge clk);
+  send_cmd = 0;
+  $display("Sent go command");
+  @(posedge cmd_sent);
+  
+  cmd = STOP;
+  send_cmd = 1;
+  @(posedge clk);
+  send_cmd = 0;
+  $display("Sent stop command");
+  @(posedge cmd_sent);
+  $stop;
+
 end
 
 always

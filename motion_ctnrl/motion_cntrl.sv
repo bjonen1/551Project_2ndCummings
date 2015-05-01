@@ -136,9 +136,9 @@ module motion_cntrl(clk, rst_n, cnv_cmplt, go, res, strt_cnv, IR_out_en, IR_mid_
 	//timer
 	always_ff @(posedge clk, negedge rst_n)
 		if(!rst_n)
-			timer_cnt <= 12'h000;
+			timer_cnt <= timer_load;
 		else if(clr_timer)
-			timer_cnt <= 12'h000;
+			timer_cnt <= timer_load;
 		else if(load_timer)
 			timer_cnt <= timer_load;
 		else if(strt_timer && !timer_done)
@@ -166,7 +166,7 @@ module motion_cntrl(clk, rst_n, cnv_cmplt, go, res, strt_cnv, IR_out_en, IR_mid_
 	//next state logic
 	always_comb begin
 		dst2accum = 1'b0;
-		res2accum = 1'b1;
+		res2accum = 1'b0;
 		dst2error = 1'b0;
 		dst2intgrl = 1'b0; 
 		dst2icomp = 1'b0;
@@ -205,18 +205,22 @@ module motion_cntrl(clk, rst_n, cnv_cmplt, go, res, strt_cnv, IR_out_en, IR_mid_
 					
 					nxt_state = MOD;
 				end
-			MOD:
+			MOD: begin
+				strt_timer = 1'b1;
 				if(timer_done) begin
 					strt_cnv = 1'b1;
 					nxt_state = CONV;
 				end
 				else
 					nxt_state = MOD;
+			end
 			CONV:
 				if(cnv_cmplt) begin
 					clr_timer = 1'b1;
-					case(chnnl)
-						0: res2accum = 1'b1;
+					case(chnnl_cnt)
+						0: begin
+							res2accum = 1'b1;
+						end
 						2: begin
 							dst2accum = 1'b1;
 							src2sel = 3'b000;
@@ -229,6 +233,7 @@ module motion_cntrl(clk, rst_n, cnv_cmplt, go, res, strt_cnv, IR_out_en, IR_mid_
 							src1sel = 3'b000;
 							mult4 = 1'b1;
 						end
+						
 					endcase
 					
 					inc_chnnl_cnt = 1'b1;
@@ -239,17 +244,19 @@ module motion_cntrl(clk, rst_n, cnv_cmplt, go, res, strt_cnv, IR_out_en, IR_mid_
 				end
 				else
 					nxt_state = CONV;
-			CALC:
+			CALC: begin
+				strt_timer = 1'b1;
 				if(timer_done) begin
 					strt_cnv = 1'b1;
 					nxt_state = CONV2;
 				end
 				else
 					nxt_state = CALC;
+			end
 			CONV2:
 				if(cnv_cmplt) begin
 					clr_timer = 1'b1;
-					case(chnnl)
+					case(chnnl_cnt)
 						1: begin
 							dst2accum = 1'b1;
 							src2sel = 3'b000;

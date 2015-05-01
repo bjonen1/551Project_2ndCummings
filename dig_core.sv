@@ -31,7 +31,7 @@ module dig_core(clk,rst_n,cmd_rdy,cmd,clr_cmd_rdy,lft,rht,buzz,buzz_n,
   ///////////////////////////////////////////////
   // Instantiate Command & Control Block Next //
   //////////////////////////////////////////////
-  comProc iCommand(.clk(clk), .rst_n(rst_n), .cmd_rdy(cmd_rdy), .cmd(cmd), .ID_vld(ID_vld), .ID(ID), .Ok2Move(Ok2Move), .clr_cmd_rdy(clr_cmd_rdy), .go(go), .clr_ID_vld(clr_ID_vld), .buzz(buzz), .buzz_n(buzz_n), .in_transit(in_transit));
+  comProc iCommand(.clk(clk), .rst_n(rst_n), .cmd_rdy(cmd_rdy), .cmd(cmd), .ID_vld(ID_vld), .ID(ID), .Ok2Move(OK2Move), .clr_cmd_rdy(clr_cmd_rdy), .go(go), .clr_ID_vld(clr_ID_vld), .buzz(buzz), .buzz_n(buzz_n), .in_transit(in_transit));
 
   ///////////////////////////////////////////////
   // Instantiate Motion Controller Block Next //

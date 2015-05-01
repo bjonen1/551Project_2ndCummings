@@ -7,8 +7,8 @@ module comProc(clk, rst_n, cmd_rdy, cmd, ID_vld, ID, Ok2Move, clr_cmd_rdy, go, c
 	reg [5:0] dest_ID;
 	reg [16:0] buzzer;
 	
-	reg [7:0] stop = {2'b00,6'hxx};	// stop command
-	reg [7:0] GO;	//go command -- ID is 8bits, w/ first 2 bits = 2'b00 for valid ID. Only lower 6 bits provide unique station identifier
+	reg [1:0] stop;	// stop command
+	reg [1:0] GO;	//go command -- ID is 8bits, w/ first 2 bits = 2'b00 for valid ID. Only lower 6 bits provide unique station identifier
 	
 	logic set_in_transit, clr_in_transit, set_dest_ID, piezoEn;
 	
@@ -29,7 +29,8 @@ module comProc(clk, rst_n, cmd_rdy, cmd, ID_vld, ID, Ok2Move, clr_cmd_rdy, go, c
 			
 	assign buzz = buzzer[16];
 	assign buzz_n = ~buzz;
-	assign GO = {2'b01, ID[5:0]};
+	assign GO = 2'b01;
+	assign stop = 2'b00;
 	
 	//in_transit flop
 	always_ff @(posedge clk, negedge rst_n)
@@ -70,26 +71,31 @@ module comProc(clk, rst_n, cmd_rdy, cmd, ID_vld, ID, Ok2Move, clr_cmd_rdy, go, c
 		
 		case(state)
 			IDLE:
-				if(cmd == GO && cmd_rdy) begin
+				if(cmd[7:6] == GO && cmd_rdy) begin
 					set_in_transit = 1'b1;
 					set_dest_ID = 1'b1;
+					clr_cmd_rdy = 1'b1;
 					nxt_state = CMD_RDY;        //*
 				end
 			CMD_RDY:
 				if(!cmd_rdy) begin
 					nxt_state = ID_VLD;
-					clr_cmd_rdy = 1'b1;
 					end
-				else if(cmd != GO && cmd != stop)
+				else if(cmd[7:6] != GO && cmd[7:6] != stop) begin
+					clr_cmd_rdy = 1'b1;
 					nxt_state = ID_VLD;
-				else if(cmd == GO) begin
+				end
+				else if(cmd[7:6] == GO) begin
 					set_in_transit = 1'b1;
 					set_dest_ID = 1'b1;
+					clr_cmd_rdy = 1'b1;
 					nxt_state = CMD_RDY;
 				end
-				else //cmd == stop
+				else begin//cmd == stop
+					clr_cmd_rdy = 1'b1;
 					clr_in_transit = 1'b1;
-			default:
+				end
+			default: //ID_VLD
 				if(~ID_vld)
 					nxt_state = CMD_RDY;
 				else if(ID != dest_ID)begin
