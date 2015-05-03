@@ -50,7 +50,7 @@ module A2D__tb();
 						$display("Expected %h from addr %h", ~analogData[(error * 6 * 8)+ (conv*8) + chnnl], (error * 6 * 8)+ (conv * 8) + chnnl);
 						$display("Got %h\n", res);
 					end
-					repeat(10)@(posedge clk);
+					repeat(100)@(posedge clk);
 					//rst_n = 1'b0;
 				end
 			end

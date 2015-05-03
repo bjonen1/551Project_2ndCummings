@@ -50,6 +50,11 @@ barcode_mimic iMSTR(.clk(clk),.rst_n(rst_n),.period(22'h1000),.send(send_BC),.st
 
 localparam [7:0] STOP = {2'b00,6'hxx};
 localparam [7:0] GO = {2'b01, 6'h00};
+
+//current problem
+// rht, lft, fwd are almost always 0
+// Can't really test fwd/rev_lft/rht
+// Seems to be correct, A2D result is usually 0
 				
 initial begin
   ///////////////////////////////////////////////////
@@ -79,12 +84,16 @@ initial begin
   send_cmd = 0;
   $display("Sent go command");
   @(posedge cmd_sent);
+  if(!in_transit)
+	$display("Error: Should be moving");
   Barcode = 8'h02;
   send_BC = 1;
   @(posedge clk);
   send_BC = 0;
   @(posedge BC_done);
   $display("Sent new ID");
+  if(in_transit)
+	$display("Error: Should have stopped");
   $stop;
   
   cmd = GO | 6'h01;
@@ -93,13 +102,16 @@ initial begin
   send_cmd = 0;
   $display("Sent go command");
   @(posedge cmd_sent);
-  
+  if(!in_transit)
+	$display("Error: Should be moving");
   cmd = STOP;
   send_cmd = 1;
   @(posedge clk);
   send_cmd = 0;
   $display("Sent stop command");
   @(posedge cmd_sent);
+  if(in_transit)
+	$display("Error: Should have stopped");
   $stop;
 
 end
