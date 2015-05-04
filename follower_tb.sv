@@ -9,7 +9,7 @@ reg clr_buzz_cnt;
 wire a2d_SS_n, SCLK, MISO, MOSI;
 wire rev_rht, rev_lft, fwd_rht, fwd_lft;
 wire IR_in_en, IR_mid_en, IR_out_en;
-wire buzz, buzz_n, prox_en, BC, TX_dbg;
+wire buzz, buzz_n, in_transit, BC, TX_dbg;
 wire [7:0] led;
 wire [3:0] buzz_cnt,buzz_cnt_n;
 wire [9:0] duty_fwd_rht,duty_fwd_lft,duty_rev_rht,duty_rev_lft;
@@ -18,6 +18,8 @@ wire [9:0] duty_fwd_rht,duty_fwd_lft,duty_rev_rht,duty_rev_lft;
 // Declare any localparams that might    //
 // improve code readability below here. //
 /////////////////////////////////////////
+localparam [7:0] STOP = {2'b00,6'h00};
+localparam [7:0] GO = {2'b01, 6'h00};
 
 //////////////////////
 // Instantiate DUT //
@@ -47,9 +49,6 @@ barcode_mimic iMSTR(.clk(clk),.rst_n(rst_n),.period(22'h1000),.send(send_BC),.st
 // useful for monitoring/testing design.     //
 //////////////////////////////////////////////
 
-
-localparam [7:0] STOP = {2'b00,6'hxx};
-localparam [7:0] GO = {2'b01, 6'h00};
 
 //current problem
 // rht, lft, fwd are almost always 0
@@ -86,6 +85,7 @@ initial begin
   @(posedge cmd_sent);
   if(!in_transit)
 	$display("Error: Should be moving");
+  //sent new station id should stop because it arrived
   Barcode = 8'h02;
   send_BC = 1;
   @(posedge clk);
@@ -94,8 +94,9 @@ initial begin
   $display("Sent new ID");
   if(in_transit)
 	$display("Error: Should have stopped");
-  $stop;
+  //$stop;
   
+  //test stop command
   cmd = GO | 6'h01;
   send_cmd = 1;
   @(posedge clk);
@@ -110,6 +111,21 @@ initial begin
   send_cmd = 0;
   $display("Sent stop command");
   @(posedge cmd_sent);
+  if(in_transit)
+	$display("Error: Should have stopped");
+  //$stop;
+  
+  //test proximity stop
+  cmd = GO | 6'h01;
+  send_cmd = 1;
+  @(posedge clk);
+  send_cmd = 0;
+  $display("Sent go command");
+  @(posedge cmd_sent);
+  if(!in_transit)
+	$display("Error: Should be moving");
+  OK2Move = 0;
+  @(posedge clk);
   if(in_transit)
 	$display("Error: Should have stopped");
   $stop;
