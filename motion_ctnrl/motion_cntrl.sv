@@ -1,3 +1,4 @@
+`include "ALU/alu.v"
 module motion_cntrl(clk, rst_n, cnv_cmplt, go, res, strt_cnv, IR_out_en, IR_mid_en, IR_in_en, lft, rht, chnnl);
 	input clk, rst_n, cnv_cmplt;
 	input [11:0] res;

@@ -1,3 +1,4 @@
+`include "cnt10bit.v"
 module pwm10bit(clk, rst_n, duty, PWM_sig);
 	input clk, rst_n;
 	input [9:0] duty;

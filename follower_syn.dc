@@ -1,0 +1,48 @@
+#read files
+#lower files are included below
+read_file -format sverilog {./follower.v}
+
+#set design to top level
+set current_design Follower
+
+#400Mhz clock
+create_clock -name "clk" -period 2.5 {clk}
+
+#isolate clk
+set_dont_touch_network [find port clk]
+
+#collect other inputs
+set prim_inputs [remove_from_collection [all_inputs] [find port clk]]
+
+#input delay of .5ns
+set_input_delay -clock clk .5 $prim_inputs
+
+#output delay of .5ns
+set_output_delay -clock clk .5 [all_outputs]
+
+#set drive strength
+set_driving_cell -lib_cell ND2D2BWP -library tcbn40lpbwptc $prim_inputs
+
+#.1pF load
+set_load .1 [all_outputs]
+
+#max clock transition .15ns
+set_max_transition .15 [current_design]
+
+#clock uncertainty .1ns
+set_clock_uncertainty .1 clk
+
+#use library's library
+set_wire_load_model -name TSMC32K_LowK_Conservative -library tcbn40lpbwptc
+
+#flatten design
+ungroup –all -flatten
+
+#standard compile
+compile -map_effort high
+
+#pipe area report to file
+report_area > follower_area_high.txt
+
+#write out gate netlist
+write -format verilog Follower -output follower_high.vg

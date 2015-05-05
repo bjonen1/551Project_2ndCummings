@@ -1,0 +1,21 @@
+read_file -format verilog {./add16bit.v,./alu.v}
+
+set current_design ALU 
+
+set_drive 10 [all_inputs]
+
+set_load .01 [all_outputs]
+
+set_max_transition .15 [current_design]
+
+set_wire_load_model -name TSMC32K_Lowk_Conservative -library tcbn40lpbwptc
+
+set_max_delay 2.5 -to [all_outputs]
+
+compile
+
+report_area
+
+report_timing -delay max
+
+write -format verilog ALU -output alu.vg

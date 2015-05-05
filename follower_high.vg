@@ -1,0 +1,45 @@
+
+module Follower ( clk, RST_n, led, a2d_SS_n, SCLK, MISO, MOSI, rev_rht, 
+        rev_lft, fwd_rht, fwd_lft, IR_in_en, IR_mid_en, IR_out_en, in_transit, 
+        OK2Move, buzz, buzz_n, BC, RX );
+  output [7:0] led;
+  input clk, RST_n, MISO, OK2Move, BC, RX;
+  output a2d_SS_n, SCLK, MOSI, rev_rht, rev_lft, fwd_rht, fwd_lft, IR_in_en,
+         IR_mid_en, IR_out_en, in_transit, buzz, buzz_n;
+  wire   \*Logic0* , rst_n, cmd_rdy, clr_cmd_rdy, clr_ID_vld, ID_vld, strt_cnv,
+         cnv_cmplt, n8;
+  wire   [7:0] cmd;
+  wire   [10:0] lft;
+  wire   [10:0] rht;
+  wire   [7:0] ID;
+  wire   [2:0] chnnl;
+  wire   [11:0] A2D_res;
+  assign led[0] = \*Logic0* ;
+
+  reset_synch iRST ( .RST_n(RST_n), .clk(clk), .rst_n(rst_n) );
+  dig_core iCORE ( .clk(clk), .rst_n(n8), .cmd_rdy(cmd_rdy), .cmd(cmd), 
+        .clr_cmd_rdy(clr_cmd_rdy), .lft(lft), .rht(rht), .buzz(buzz), .buzz_n(
+        buzz_n), .in_transit(in_transit), .OK2Move(OK2Move), .ID(ID), 
+        .clr_ID_vld(clr_ID_vld), .ID_vld(ID_vld), .cnv_cmplt(cnv_cmplt), 
+        .strt_cnv(strt_cnv), .chnnl(chnnl), .A2D_res(A2D_res), .IR_in_en(
+        IR_in_en), .IR_mid_en(IR_mid_en), .IR_out_en(IR_out_en) );
+  uart_rcv iCMD ( .clk(clk), .rst_n(n8), .RX(RX), .clr_rx_rdy(clr_cmd_rdy), 
+        .rx_rdy(cmd_rdy), .rx_data(cmd) );
+  motor_cntrl iMTR ( .clk(clk), .rst_n(n8), .rht(rht), .lft(lft), .fwd_rht(
+        fwd_rht), .fwd_lft(fwd_lft), .rev_rht(rev_rht), .rev_lft(rev_lft) );
+  barcode iBC ( .clk(clk), .rst_n(n8), .BC(BC), .clr_ID_vld(clr_ID_vld), 
+        .ID_vld(ID_vld), .ID(ID) );
+  A2D_intf iA2D ( .clk(clk), .rst_n(n8), .strt_cnv(strt_cnv), .cnv_cmplt(
+        cnv_cmplt), .chnnl(chnnl), .res(A2D_res), .a2d_SS_n(a2d_SS_n), .SCLK(
+        SCLK), .MOSI(MOSI), .MISO(MISO) );
+  TIELBWP U2 ( .ZN(led[1]) );
+  TIELBWP U3 ( .ZN(led[2]) );
+  TIELBWP U4 ( .ZN(led[3]) );
+  TIELBWP U5 ( .ZN(led[4]) );
+  TIELBWP U6 ( .ZN(led[5]) );
+  TIELBWP U7 ( .ZN(led[6]) );
+  TIELBWP U8 ( .ZN(led[7]) );
+  CKBD3BWP U9 ( .I(rst_n), .Z(n8) );
+  TIELBWP U10 ( .ZN(\*Logic0* ) );
+endmodule
+
