@@ -1,3 +1,6 @@
+`include "a2dIntf/ADC128S.sv"
+`include "UART/UART_tx.sv"
+`include "barcode/barcode_mimic.sv"
 module Follower_tb();
 
 reg clk,rst_n;			// 50MHz clock and active low aysnch reset
@@ -5,6 +8,7 @@ reg OK2Move;
 reg send_cmd,send_BC;
 reg [7:0] cmd,Barcode;
 reg clr_buzz_cnt;
+reg error;
 
 wire a2d_SS_n, SCLK, MISO, MOSI;
 wire rev_rht, rev_lft, fwd_rht, fwd_lft;
@@ -65,6 +69,7 @@ initial begin
   //////////////////////////////////////////////
   clk = 0;
   rst_n = 0;
+  error = 0;
   OK2Move = 0;
   send_cmd = 0;
   send_BC = 0;
@@ -80,15 +85,7 @@ initial begin
   send_BC = 0;
   @(posedge BC_done);
   
-  // send_cmd = 1;
-  // @(posedge clk);
-  // send_cmd = 0;
-  // $display("Sent go command");
   send_go_command(6'h02);
-  
-  // @(posedge cmd_sent);
-  // if(!in_transit)
-	// $display("Error: Should be moving");
 	
   //sent new station id should stop because it arrived
   Barcode = 8'h02;
@@ -101,41 +98,21 @@ initial begin
 	$display("Error: Should have stopped");
   //$stop;
   
-  //test stop command
-  // cmd = GO | 6'h01;
-  // send_cmd = 1;
-  // @(posedge clk);
-  // send_cmd = 0;
-  // $display("Sent go command");
-  // @(posedge cmd_sent);
-  // if(!in_transit)
-	// $display("Error: Should be moving");
   send_go_command(6'h01);
   repeat(100)@(posedge clk);
-  cmd = STOP;
-  send_cmd = 1;
-  @(posedge clk);
-  send_cmd = 0;
-  $display("Sent stop command");
-  @(posedge cmd_sent);
-  if(in_transit)
-	$display("Error: Should have stopped");
+  
+  send_stop_command();
   //$stop;
   repeat(100)@(posedge clk);
-  //test proximity stop
-  // cmd = GO | 6'h01;
-  // send_cmd = 1;
-  // @(posedge clk);
-  // send_cmd = 0;
-  // $display("Sent go command");
-  // @(posedge cmd_sent);
-  // if(!in_transit)
-	// $display("Error: Should be moving");
   send_go_command(6'h01);
   OK2Move = 0;
-  @(posedge clk);
-  if(in_transit)
+  repeat(5)@(posedge clk);
+  if(iDUT.go) begin
 	$display("Error: Should have stopped");
+	error = 1;
+	@(posedge clk);
+	error = 0;
+  end
   $stop;
 
 end
@@ -155,9 +132,36 @@ always
 		@(posedge clk);
 		send_cmd = 0;
 		$display("Sent go command");
+		//@(negedge iDUT.cmd_rdy);
 		@(posedge cmd_sent);
-		if(!in_transit)
+		if(!in_transit) begin
 			$display("Error: Should be moving");
+			error = 1;
+			@(posedge clk);
+			error = 0;
+		end
+	end
+  endtask
+  
+  task send_stop_command;
+	// output send_cmd;
+	// output [7:0] cmd;
+	// input GO;
+	
+	begin
+		cmd = STOP;
+		send_cmd = 1;
+		@(posedge clk);
+		send_cmd = 0;
+		$display("Sent stop command");
+		//@(negedge iDUT.cmd_rdy);
+		@(posedge cmd_sent);
+		if(in_transit) begin
+			$display("Error: Should have stopped");
+			error = 1;
+			@(posedge clk);
+			error = 0;
+		end
 	end
   endtask
 endmodule

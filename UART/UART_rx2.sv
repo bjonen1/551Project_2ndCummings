@@ -1,4 +1,4 @@
-module uart_rx(clk, rst_n, clr_rx_rdy, RX, rx_rdy, rx_data);
+module uart_rcv(clk, rst_n, clr_rx_rdy, RX, rx_rdy, rx_data);
 	input clk, rst_n, clr_rx_rdy, RX;
 	output reg rx_rdy;
 	output reg [7:0] rx_data;
