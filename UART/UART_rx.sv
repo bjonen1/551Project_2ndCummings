@@ -27,31 +27,31 @@ module RX_SM(clk,rst_n,clr_rdy, RX, rdy, bit_cnt, receiving, load, clrOut_rdy, s
   case(state)
     RECEIVE : begin
       if (bit_cnt == 4'h9)begin
-	set_rdy = 1'b1;
-	next_state = RESET;
-	end
-      else begin
-        next_state = RECEIVE;
-	receiving = 1'b1;
-	end
+		set_rdy = 1'b1;
+		next_state = RESET;
+		end
+     else begin
+		next_state = RECEIVE;
+		receiving = 1'b1;
+		end
     end
     
     default:  begin//default is reset
-      if (RX == 1'b0 && !rdy)begin
+     if (RX == 1'b0 && !rdy)begin
         next_state = RECEIVE;
-	clrOut_rdy= 1'b1; //if the last byte was not cleared/read, we just lose it and read the next incoming byte
-	receiving = 1'b1;
-	end
+		clrOut_rdy= 1'b1; //if the last byte was not cleared/read, we just lose it and read the next incoming byte
+		receiving = 1'b1;
+		end
       else if (clr_rdy)begin
-	next_state = RESET;
-	load = 1'b1;
-	clrOut_rdy = 1'b1;
-	end
+		next_state = RESET;
+		load = 1'b1;
+		clrOut_rdy = 1'b1;
+		end
       else begin
         next_state = RESET;
-	load = 1'b1;
-	end
-      end
+		load = 1'b1;
+		end
+     end
   endcase
   end
 endmodule
