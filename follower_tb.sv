@@ -1,3 +1,6 @@
+`include "a2dIntf/ADC128S.sv"
+`include "UART/UART_tx.sv"
+`include "barcode/barcode_mimic.sv"
 module Follower_tb();
 
 reg clk,rst_n;			// 50MHz clock and active low aysnch reset
@@ -5,11 +8,12 @@ reg OK2Move;
 reg send_cmd,send_BC;
 reg [7:0] cmd,Barcode;
 reg clr_buzz_cnt;
+reg error;
 
 wire a2d_SS_n, SCLK, MISO, MOSI;
 wire rev_rht, rev_lft, fwd_rht, fwd_lft;
 wire IR_in_en, IR_mid_en, IR_out_en;
-wire buzz, buzz_n, prox_en, BC, TX_dbg;
+wire buzz, buzz_n, in_transit, BC, TX_dbg;
 wire [7:0] led;
 wire [3:0] buzz_cnt,buzz_cnt_n;
 wire [9:0] duty_fwd_rht,duty_fwd_lft,duty_rev_rht,duty_rev_lft;
@@ -18,6 +22,8 @@ wire [9:0] duty_fwd_rht,duty_fwd_lft,duty_rev_rht,duty_rev_lft;
 // Declare any localparams that might    //
 // improve code readability below here. //
 /////////////////////////////////////////
+localparam [7:0] STOP = {2'b00,6'h00};
+localparam [7:0] GO = {2'b01, 6'h00};
 
 //////////////////////
 // Instantiate DUT //
@@ -48,8 +54,6 @@ barcode_mimic iMSTR(.clk(clk),.rst_n(rst_n),.period(22'h1000),.send(send_BC),.st
 //////////////////////////////////////////////
 
 
-localparam [7:0] STOP = {2'b00,6'hxx};
-localparam [7:0] GO = {2'b01, 6'h00};
 
 //current problem
 // rht, lft, fwd are almost always 0
@@ -65,6 +69,7 @@ initial begin
   //////////////////////////////////////////////
   clk = 0;
   rst_n = 0;
+  error = 0;
   OK2Move = 0;
   send_cmd = 0;
   send_BC = 0;
@@ -74,18 +79,15 @@ initial begin
   repeat(4)@(negedge clk);
   rst_n = 1;
   OK2Move = 1;
-  cmd = GO | 6'h02;
+  //cmd = GO | 6'h02;
   send_BC = 1;
   @(negedge clk);
   send_BC = 0;
   @(posedge BC_done);
-  send_cmd = 1;
-  @(posedge clk);
-  send_cmd = 0;
-  $display("Sent go command");
-  @(posedge cmd_sent);
-  if(!in_transit)
-	$display("Error: Should be moving");
+  
+  send_go_command(6'h02);
+	
+  //sent new station id should stop because it arrived
   Barcode = 8'h02;
   send_BC = 1;
   @(posedge clk);
@@ -94,24 +96,23 @@ initial begin
   $display("Sent new ID");
   if(in_transit)
 	$display("Error: Should have stopped");
-  $stop;
+  //$stop;
   
-  cmd = GO | 6'h01;
-  send_cmd = 1;
-  @(posedge clk);
-  send_cmd = 0;
-  $display("Sent go command");
-  @(posedge cmd_sent);
-  if(!in_transit)
-	$display("Error: Should be moving");
-  cmd = STOP;
-  send_cmd = 1;
-  @(posedge clk);
-  send_cmd = 0;
-  $display("Sent stop command");
-  @(posedge cmd_sent);
-  if(in_transit)
+  send_go_command(6'h01);
+  repeat(100)@(posedge clk);
+  
+  send_stop_command();
+  //$stop;
+  repeat(100)@(posedge clk);
+  send_go_command(6'h01);
+  OK2Move = 0;
+  repeat(5)@(posedge clk);
+  if(iDUT.go) begin
 	$display("Error: Should have stopped");
+	error = 1;
+	@(posedge clk);
+	error = 0;
+  end
   $stop;
 
 end
@@ -119,5 +120,48 @@ end
 always
   #1 clk = ~ clk;
   
-
+  task send_go_command;
+	// output send_cmd;
+	// output [7:0] cmd;
+	// input GO;
+	input [5:0] dest;
+	
+	begin
+		cmd = GO | dest;
+		send_cmd = 1;
+		@(posedge clk);
+		send_cmd = 0;
+		$display("Sent go command");
+		//@(negedge iDUT.cmd_rdy);
+		@(posedge cmd_sent);
+		if(!in_transit) begin
+			$display("Error: Should be moving");
+			error = 1;
+			@(posedge clk);
+			error = 0;
+		end
+	end
+  endtask
+  
+  task send_stop_command;
+	// output send_cmd;
+	// output [7:0] cmd;
+	// input GO;
+	
+	begin
+		cmd = STOP;
+		send_cmd = 1;
+		@(posedge clk);
+		send_cmd = 0;
+		$display("Sent stop command");
+		//@(negedge iDUT.cmd_rdy);
+		@(posedge cmd_sent);
+		if(in_transit) begin
+			$display("Error: Should have stopped");
+			error = 1;
+			@(posedge clk);
+			error = 0;
+		end
+	end
+  endtask
 endmodule

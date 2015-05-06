@@ -1,3 +1,5 @@
+`include "motion_ctnrl/motion_cntrl.sv"
+`include "Command Processing/comProc.sv"
 module dig_core(clk,rst_n,cmd_rdy,cmd,clr_cmd_rdy,lft,rht,buzz,buzz_n,
                 in_transit,OK2Move,ID,clr_ID_vld,ID_vld,cnv_cmplt,strt_cnv,
 				chnnl,A2D_res,IR_in_en, IR_mid_en, go,IR_out_en,led);
