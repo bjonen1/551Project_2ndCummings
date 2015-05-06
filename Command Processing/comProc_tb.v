@@ -69,11 +69,12 @@ module comProc_tb();
 		
 		//Test cmd != go or stop, ID not valid
 		#20 ID_vld = 1'b0;
-		#20 cmd = {2'b01, 6'b00_1111}; //random cmd, not go nor stop
-		#20 if(CP1.state != CP1.ID_VLD)
-					$display("ERROR: no transition to ID_VLD",$time);
-				else
-					$display("Transition to ID_VLD - OK");	
+		#20 cmd = {2'b10, 6'b00_1111}; //random cmd, not go nor stop
+		#20 ID_vld = 1'b1;
+		/*//#20 if(CP1.state != CP1.ID_VLD)
+			//		$display("ERROR: no transition to ID_VLD",$time);
+				//else
+					//$display("Transition to ID_VLD - OK");	*/
 		#26 if(CP1.state != CP1.CMD_RDY)
 				$display("ERROR: incorrect state",$time);
 			else

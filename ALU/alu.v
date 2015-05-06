@@ -7,7 +7,7 @@ module ALU(accum, pcomp, pterm, fwd, a2d_res, error, intgrl, icomp, iterm, src0s
 	input signed [11:0] error, intgrl, icomp, iterm;
 	input multiply, sub, mult2, mult4, saturate;
 	
-	output [15:0] dst;
+	output signed [15:0] dst;
 	
 	wire [15:0] src1, presrc0, scaled_src0, src0, add_result,satur_add;
 	wire signed [15:0] src1mult, src0mult;
@@ -57,12 +57,12 @@ module ALU(accum, pcomp, pterm, fwd, a2d_res, error, intgrl, icomp, iterm, src0s
 	
 	assign mult_result = src1mult * src0mult;
 	
-	assign satur_mult = (mult_result[29]) ? (&mult_result[28:26]) ? mult_result[27:12]: 15'hC000:
-						(|mult_result[28:26]) ? 15'h3FFF: mult_result[27:12];
+	assign satur_mult = (mult_result[29]) ? (&mult_result[28:26]) ? mult_result[27:12]: 16'hC000:
+						(|mult_result[28:26]) ? 16'h3FFF: mult_result[27:12];
 	
 	//(mult_result[29] == 0 && mult_result > 16'h3FFF) ? 16'h3FFF:
 	//					(mult_result[29] == 1 && mult_result < 16'hC000) ? 16'hC000 : mult_result[27:12];
 
-	assign dst = multiply ? {satur_mult[14], satur_mult} : satur_add;
+	assign dst = multiply ? {/*satur_mult[14],*/ satur_mult} : satur_add;
 	
 endmodule

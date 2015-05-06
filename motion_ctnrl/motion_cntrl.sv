@@ -10,7 +10,7 @@ module motion_cntrl(clk, rst_n, cnv_cmplt, go, res, strt_cnv, IR_out_en, IR_mid_
 	output reg [2:0] chnnl;
 	output logic strt_cnv;
 	
-	wire [15:0] dst;
+	wire signed [15:0] dst;
 	
 	reg [15:0] accum, pcomp;
 	wire [13:0] pterm;
@@ -84,9 +84,9 @@ module motion_cntrl(clk, rst_n, cnv_cmplt, go, res, strt_cnv, IR_out_en, IR_mid_
 	//pcomp flop
 	always_ff @(posedge clk, negedge rst_n)
 		if(!rst_n)
-			pcomp <= 12'h000;
+			pcomp <= 16'h0000;
 		else if(dst2pcomp)
-			pcomp <= dst[11:0];
+			pcomp <= dst;
 	
 	//rht_reg flop
 	always_ff @(posedge clk, negedge rst_n)
