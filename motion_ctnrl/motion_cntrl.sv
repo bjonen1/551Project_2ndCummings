@@ -12,7 +12,6 @@ module motion_cntrl(clk, rst_n, cnv_cmplt, go, res, strt_cnv, IR_out_en, IR_mid_
 	
 	wire [15:0] dst;
 	
-	reg [11:0] res_f;
 	reg [15:0] accum, pcomp;
 	wire [13:0] pterm;
 	reg [11:0] fwd;
@@ -57,7 +56,7 @@ module motion_cntrl(clk, rst_n, cnv_cmplt, go, res, strt_cnv, IR_out_en, IR_mid_
 		else if(clr_accum)
 			accum <= 15'h0000;
 		else if(res2accum)
-			accum <= res_f;
+			accum <= res;
 		else if(dst2accum)
 			accum <= dst;
 	
@@ -120,12 +119,6 @@ module motion_cntrl(clk, rst_n, cnv_cmplt, go, res, strt_cnv, IR_out_en, IR_mid_
 		else if(dst2intgrl & ~&fwd[10:8])
 			fwd <= fwd + 1'b1;
 			
-	always_ff @(posedge clk, negedge rst_n)
-		if(!rst_n)
-			res_f <= 12'h000;
-		else if(cnv_cmplt)
-			res_f <= res;
-			
 	//channel count flop
 	always_ff @(posedge clk, negedge rst_n)
 		if(!rst_n)
@@ -164,7 +157,7 @@ module motion_cntrl(clk, rst_n, cnv_cmplt, go, res, strt_cnv, IR_out_en, IR_mid_
 			int_dec <= int_dec + 1'b1;
 	
 	//ALU
-	ALU iALU(.accum(accum), .pcomp(pcomp), .pterm(pterm), .fwd(fwd), .a2d_res(res_f), .error(error), .intgrl(intgrl), .icomp(icomp), .iterm(iterm), .src0sel(src1sel), .src1sel(src2sel), .multiply(multiply), .sub(sub), .mult2(mult2), .mult4(mult4), .saturate(saturate), .dst(dst));
+	ALU iALU(.accum(accum), .pcomp(pcomp), .pterm(pterm), .fwd(fwd), .a2d_res(res), .error(error), .intgrl(intgrl), .icomp(icomp), .iterm(iterm), .src0sel(src1sel), .src1sel(src2sel), .multiply(multiply), .sub(sub), .mult2(mult2), .mult4(mult4), .saturate(saturate), .dst(dst));
 	
 	//state flop
 	always_ff @(posedge clk, negedge rst_n)

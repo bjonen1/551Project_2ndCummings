@@ -39,7 +39,7 @@ module Follower ( clk, RST_n, led, a2d_SS_n, SCLK, MISO, MOSI, rev_rht,
   TIELBWP U6 ( .ZN(led[5]) );
   TIELBWP U7 ( .ZN(led[6]) );
   TIELBWP U8 ( .ZN(led[7]) );
-  CKBD3BWP U9 ( .I(rst_n), .Z(n8) );
+  CKBD2BWP U9 ( .I(rst_n), .Z(n8) );
   TIELBWP U10 ( .ZN(\*Logic0* ) );
 endmodule
 

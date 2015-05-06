@@ -50,6 +50,7 @@ barcode_mimic iMSTR(.clk(clk),.rst_n(rst_n),.period(22'h1000),.send(send_BC),.st
 //////////////////////////////////////////////
 
 
+
 //current problem
 // rht, lft, fwd are almost always 0
 // Can't really test fwd/rev_lft/rht
@@ -73,18 +74,22 @@ initial begin
   repeat(4)@(negedge clk);
   rst_n = 1;
   OK2Move = 1;
-  cmd = GO | 6'h02;
+  //cmd = GO | 6'h02;
   send_BC = 1;
   @(negedge clk);
   send_BC = 0;
   @(posedge BC_done);
-  send_cmd = 1;
-  @(posedge clk);
-  send_cmd = 0;
-  $display("Sent go command");
-  @(posedge cmd_sent);
-  if(!in_transit)
-	$display("Error: Should be moving");
+  
+  // send_cmd = 1;
+  // @(posedge clk);
+  // send_cmd = 0;
+  // $display("Sent go command");
+  send_go_command(6'h02);
+  
+  // @(posedge cmd_sent);
+  // if(!in_transit)
+	// $display("Error: Should be moving");
+	
   //sent new station id should stop because it arrived
   Barcode = 8'h02;
   send_BC = 1;
@@ -97,14 +102,16 @@ initial begin
   //$stop;
   
   //test stop command
-  cmd = GO | 6'h01;
-  send_cmd = 1;
-  @(posedge clk);
-  send_cmd = 0;
-  $display("Sent go command");
-  @(posedge cmd_sent);
-  if(!in_transit)
-	$display("Error: Should be moving");
+  // cmd = GO | 6'h01;
+  // send_cmd = 1;
+  // @(posedge clk);
+  // send_cmd = 0;
+  // $display("Sent go command");
+  // @(posedge cmd_sent);
+  // if(!in_transit)
+	// $display("Error: Should be moving");
+  send_go_command(6'h01);
+  repeat(100)@(posedge clk);
   cmd = STOP;
   send_cmd = 1;
   @(posedge clk);
@@ -114,16 +121,17 @@ initial begin
   if(in_transit)
 	$display("Error: Should have stopped");
   //$stop;
-  
+  repeat(100)@(posedge clk);
   //test proximity stop
-  cmd = GO | 6'h01;
-  send_cmd = 1;
-  @(posedge clk);
-  send_cmd = 0;
-  $display("Sent go command");
-  @(posedge cmd_sent);
-  if(!in_transit)
-	$display("Error: Should be moving");
+  // cmd = GO | 6'h01;
+  // send_cmd = 1;
+  // @(posedge clk);
+  // send_cmd = 0;
+  // $display("Sent go command");
+  // @(posedge cmd_sent);
+  // if(!in_transit)
+	// $display("Error: Should be moving");
+  send_go_command(6'h01);
   OK2Move = 0;
   @(posedge clk);
   if(in_transit)
@@ -135,5 +143,21 @@ end
 always
   #1 clk = ~ clk;
   
-
+  task send_go_command;
+	// output send_cmd;
+	// output [7:0] cmd;
+	// input GO;
+	input [5:0] dest;
+	
+	begin
+		cmd = GO | dest;
+		send_cmd = 1;
+		@(posedge clk);
+		send_cmd = 0;
+		$display("Sent go command");
+		@(posedge cmd_sent);
+		if(!in_transit)
+			$display("Error: Should be moving");
+	end
+  endtask
 endmodule

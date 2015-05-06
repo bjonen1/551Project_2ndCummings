@@ -3,7 +3,7 @@
 Report : area
 Design : Follower
 Version: I-2013.12-SP5
-Date   : Tue May  5 20:38:55 2015
+Date   : Tue May  5 20:33:26 2015
 ****************************************
 
 Information: Updating design information... (UID-85)
@@ -20,12 +20,12 @@ Number of macros/black boxes:               0
 Number of buf/inv:                          1
 Number of references:                       8
 
-Combinational area:               3422.336419
-Buf/Inv area:                      415.774811
-Noncombinational area:            1261.259995
+Combinational area:               3544.405234
+Buf/Inv area:                      515.088014
+Noncombinational area:            1255.791593
 Macro/Black Box area:                0.000000
 Net Interconnect area:      undefined  (Wire load has zero net area)
 
-Total cell area:                  4683.596414
+Total cell area:                  4800.196827
 Total area:                 undefined
 1
