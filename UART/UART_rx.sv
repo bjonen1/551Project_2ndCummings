@@ -1,7 +1,7 @@
 //it works yo
-module RX_SM(clk,rst_n,clr_rdy, RX, rdy, bit_cnt, receiving, load, clrOut_rdy, set_rdy);
+module RX_SM(clk,rst_n,clr_rdy, RX, rx_f, rdy, bit_cnt, receiving, load, clrOut_rdy, set_rdy);
 
-  input clk, rst_n, clr_rdy, RX, rdy;
+  input clk, rst_n, clr_rdy, RX, rx_f, rdy;
   input [3:0] bit_cnt;
   
   output logic receiving, load, clrOut_rdy, set_rdy;
@@ -29,14 +29,22 @@ module RX_SM(clk,rst_n,clr_rdy, RX, rdy, bit_cnt, receiving, load, clrOut_rdy, s
       if (bit_cnt == 4'h9)begin
 		set_rdy = 1'b1;
 		next_state = RESET;
+<<<<<<< HEAD
 		end
      else begin
 		next_state = RECEIVE;
 		receiving = 1'b1;
+=======
+	end
+		else begin
+			next_state = RECEIVE;
+			receiving = 1'b1;
+>>>>>>> 1718f7ba6fb5ca54be4c76e905f6c00b97894b86
 		end
     end
     
     default:  begin//default is reset
+<<<<<<< HEAD
      if (RX == 1'b0 && !rdy)begin
         next_state = RECEIVE;
 		clrOut_rdy= 1'b1; //if the last byte was not cleared/read, we just lose it and read the next incoming byte
@@ -52,6 +60,23 @@ module RX_SM(clk,rst_n,clr_rdy, RX, rdy, bit_cnt, receiving, load, clrOut_rdy, s
 		load = 1'b1;
 		end
      end
+=======
+      if (RX == 1'b0 && rx_f == 1'b1 && !rdy)begin
+        next_state = RECEIVE;
+		clrOut_rdy= 1'b1; //if the last byte was not cleared/read, we just lose it and read the next incoming byte
+		receiving = 1'b1;
+	end
+		else if (clr_rdy)begin
+			next_state = RESET;
+			load = 1'b1;
+			clrOut_rdy = 1'b1;
+		end
+		else begin
+			next_state = RESET;
+			load = 1'b1;
+		end
+      end
+>>>>>>> 1718f7ba6fb5ca54be4c76e905f6c00b97894b86
   endcase
   end
 endmodule
@@ -71,7 +96,13 @@ reg shift;
 reg rdy_preOut;
 reg half_init;
 wire set_baud0;
-RX_SM SM1(clk,rst_n,clr_rx_rdy, RX, rx_rdy, bit_cnt, receiving, load, clrOut_rdy, set_rdy);
+
+reg rx_f;
+RX_SM SM1(clk,rst_n,clr_rx_rdy, RX, rx_f, rx_rdy, bit_cnt, receiving, load, clrOut_rdy, set_rdy);
+
+//rx flop for edge detection
+always_ff @(posedge clk)
+	rx_f <= RX;
 
 //THIS BLOCK IS ALL OF THE BAUD CNTR
 always @(posedge clk or negedge rst_n)begin
