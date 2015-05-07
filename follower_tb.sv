@@ -101,7 +101,7 @@ initial begin
   test_proximity();
   
   send_go_command(6'h01);
-  // $stop;
+  $stop;
 
 end
 
