@@ -6,6 +6,7 @@ reg OK2Move;
 reg send_cmd,send_BC;
 reg [7:0] cmd,Barcode;
 reg clr_buzz_cnt;
+reg error;
 
 wire a2d_SS_n, SCLK, MISO, MOSI;
 wire rev_rht, rev_lft, fwd_rht, fwd_lft;
@@ -14,6 +15,7 @@ wire buzz, buzz_n, in_transit, BC, TX_dbg;
 wire [7:0] led;
 wire [3:0] buzz_cnt,buzz_cnt_n;
 wire [9:0] duty_fwd_rht,duty_fwd_lft,duty_rev_rht,duty_rev_lft;
+wire fl_duty_rdy, rl_duty_rdy, fr_duty_rdy, rr_duty_rdy;
 
 ////////////////////////////////////////////
 // Declare any localparams that might    //
@@ -49,6 +51,10 @@ barcode_mimic iMSTR(.clk(clk),.rst_n(rst_n),.period(22'h1000),.send(send_BC),.st
 // Instantiate any other units you might find //
 // useful for monitoring/testing design.     //
 //////////////////////////////////////////////
+duty_finder dutyFL(.clk(clk), .rst_n(rst_n), .pwm(fwd_lft), .duty(duty_fwd_lft), .rdy(fl_duty_rdy));
+duty_finder dutyRL(.clk(clk), .rst_n(rst_n), .pwm(rev_lft), .duty(duty_rev_lft), .rdy(rl_duty_rdy));
+duty_finder dutyFR(.clk(clk), .rst_n(rst_n), .pwm(fwd_rht), .duty(duty_fwd_rht), .rdy(fr_duty_rdy));
+duty_finder dutyRR(.clk(clk), .rst_n(rst_n), .pwm(rev_rht), .duty(duty_rev_rht), .rdy(rr_duty_rdy));
 
 
 //current problem
@@ -65,76 +71,107 @@ initial begin
   //////////////////////////////////////////////
   clk = 0;
   rst_n = 0;
+  error = 0;
   OK2Move = 0;
   send_cmd = 0;
   send_BC = 0;
   cmd = STOP;
-  Barcode = 8'h01;
+  Barcode = 8'h00;
   
   repeat(4)@(negedge clk);
   rst_n = 1;
   OK2Move = 1;
-  cmd = GO | 6'h02;
-  send_BC = 1;
-  @(negedge clk);
-  send_BC = 0;
-  @(posedge BC_done);
-  send_cmd = 1;
-  @(posedge clk);
-  send_cmd = 0;
-  $display("Sent go command");
-  @(posedge cmd_sent);
-  if(!in_transit)
-	$display("Error: Should be moving");
-  //sent new station id should stop because it arrived
-  Barcode = 8'h02;
-  send_BC = 1;
-  @(posedge clk);
-  send_BC = 0;
-  @(posedge BC_done);
-  $display("Sent new ID");
+  
+  send_id(8'h01);
+  
+  send_go_command(6'h02);
+	
+  send_id(8'h02);
   if(in_transit)
 	$display("Error: Should have stopped");
   //$stop;
   
-  //test stop command
-  cmd = GO | 6'h01;
-  send_cmd = 1;
-  @(posedge clk);
-  send_cmd = 0;
-  $display("Sent go command");
-  @(posedge cmd_sent);
-  if(!in_transit)
-	$display("Error: Should be moving");
-  cmd = STOP;
-  send_cmd = 1;
-  @(posedge clk);
-  send_cmd = 0;
-  $display("Sent stop command");
-  @(posedge cmd_sent);
-  if(in_transit)
-	$display("Error: Should have stopped");
-  //$stop;
+  send_go_command(6'h01);
+  repeat(100)@(posedge clk);
   
-  //test proximity stop
-  cmd = GO | 6'h01;
-  send_cmd = 1;
-  @(posedge clk);
-  send_cmd = 0;
-  $display("Sent go command");
-  @(posedge cmd_sent);
-  if(!in_transit)
-	$display("Error: Should be moving");
-  OK2Move = 0;
-  @(posedge clk);
-  if(in_transit)
-	$display("Error: Should have stopped");
-  $stop;
+  send_stop_command();
+  //$stop;
+  repeat(100)@(posedge clk);
+  
+  test_proximity();
+  
+  send_go_command(6'h01);
+  // $stop;
 
 end
 
 always
   #1 clk = ~ clk;
   
+  task send_go_command;
+	input [5:0] dest;
+	
+	begin
+		cmd = GO | dest;
+		send_cmd = 1;
+		@(posedge clk);
+		send_cmd = 0;
+		$display("Sent go command");
+		@(posedge cmd_sent);
+		if(!in_transit) begin
+			$display("Error: Should be moving");
+			error = 1;
+			@(posedge clk);
+			error = 0;
+		end
+	end
+  endtask
+  
+  task send_stop_command;
 
+	begin
+		cmd = STOP;
+		send_cmd = 1;
+		@(posedge clk);
+		send_cmd = 0;
+		$display("Sent stop command");
+		@(posedge cmd_sent);
+		if(in_transit) begin
+			$display("Error: Should have stopped");
+			error = 1;
+			@(posedge clk);
+			error = 0;
+		end
+	end
+  endtask
+  
+  task send_id;
+	input [7:0] id;
+	
+	begin
+	  Barcode = id;
+	  send_BC = 1;
+	  @(posedge clk);
+	  send_BC = 0;
+	  @(posedge BC_done);
+	  $display("Sent ID 0x%x", id);
+	end
+  endtask
+  
+  task test_proximity;
+	begin
+	  send_go_command(6'h01);
+	  OK2Move = 0;
+	  $display("OK2Move deasserted");
+	  repeat(5)@(posedge clk);
+	  if(!fwd_lft | !fwd_rht | !rev_lft | !rev_rht) begin
+		$display("Error: Should have stopped");
+		error = 1;
+		@(posedge clk);
+		error = 0;
+	  end
+	  OK2Move = 1;
+	  $display("OK2Move asserted");
+	end
+  endtask
 endmodule

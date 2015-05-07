@@ -1,7 +1,4 @@
-`include "a2dIntf/ADC128S.sv"
-`include "UART/UART_tx.sv"
-`include "barcode/barcode_mimic.sv"
-`include "motor_cntrl/duty_finder.sv"
+`timescale 1ns/1ps
 module Follower_tb();
 
 reg clk,rst_n;			// 50MHz clock and active low aysnch reset
@@ -18,7 +15,7 @@ wire buzz, buzz_n, in_transit, BC, TX_dbg;
 wire [7:0] led;
 wire [3:0] buzz_cnt,buzz_cnt_n;
 wire [9:0] duty_fwd_rht,duty_fwd_lft,duty_rev_rht,duty_rev_lft;
-wire fl_duty_rdy, rl_duty_rdy, fr_duty_rdy, rr_duty_rdy, duty_rdy;
+wire fl_duty_rdy, rl_duty_rdy, fr_duty_rdy, rr_duty_rdy;
 
 ////////////////////////////////////////////
 // Declare any localparams that might    //
@@ -104,7 +101,7 @@ initial begin
   test_proximity();
   
   send_go_command(6'h01);
-  $stop;
+  // $stop;
 
 end
 
@@ -173,6 +170,8 @@ always
 		@(posedge clk);
 		error = 0;
 	  end
+	  OK2Move = 1;
+	  $display("OK2Move asserted");
 	end
   endtask
 endmodule
