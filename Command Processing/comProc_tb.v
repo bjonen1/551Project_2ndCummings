@@ -133,7 +133,7 @@ module comProc_tb();
 		
 		
 		end
-		
+		$stop;
 	end
 	always
 		#5 clk = ~clk;

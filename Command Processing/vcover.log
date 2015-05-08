@@ -1,0 +1,10 @@
+Merging file /userspace/k/kasuboski/ece551/hw5/551Project_2ndCummings/Command Processing/command_proc_tb.ucdb
+Merging file /userspace/k/kasuboski/ece551/hw5/551Project_2ndCummings/a2dIntf/a2dIntf_tb.ucdb
+Merging file /userspace/k/kasuboski/ece551/hw5/551Project_2ndCummings/follower_tb.ucdb
+Merging file /userspace/k/kasuboski/ece551/hw5/551Project_2ndCummings/motion_ctnrl/motion_ctnrl_tb.ucdb
+** Warning: (vcover-6820) Source code mismatch detected while merging ucdb file /userspace/k/kasuboski/ece551/hw5/551Project_2ndCummings/motion_ctnrl/motion_ctnrl_tb.ucdb, skipping code coverage merge for design unit work.ALU defined in file /userspace/k/kasuboski/ece551/hw5/551Project_2ndCummings/motion_ctnrl/ALU/alu.v, line 1
+Merging file /userspace/k/kasuboski/ece551/hw5/551Project_2ndCummings/motion_ctnrl/ALU/alu_tb.ucdb
+** Warning: (vcover-6820) Source code mismatch detected while merging ucdb file /userspace/k/kasuboski/ece551/hw5/551Project_2ndCummings/motion_ctnrl/ALU/alu_tb.ucdb, skipping code coverage merge for design unit work.ALU defined in file /userspace/k/kasuboski/ece551/hw5/551Project_2ndCummings/motion_ctnrl/ALU/alu.v, line 1
+Merging file /userspace/k/kasuboski/ece551/hw5/551Project_2ndCummings/motor_cntrl/motor_cntrl_tb.ucdb
+Writing merged result to /userspace/k/kasuboski/ece551/hw5/551Project_2ndCummings/merged_coverage.ucdb
+

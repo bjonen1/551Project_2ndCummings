@@ -100,7 +100,9 @@ initial begin
   
   test_proximity();
   
+  //test forward incrementing
   send_go_command(6'h01);
+  
   $stop;
 
 end
@@ -170,6 +172,8 @@ always
 		@(posedge clk);
 		error = 0;
 	  end
+	  //needs to be on long enough to see the buzzer duty cycle
+	  repeat(1000000)@(posedge clk);
 	  OK2Move = 1;
 	  $display("OK2Move asserted");
 	end
